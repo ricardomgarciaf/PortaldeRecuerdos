@@ -105,6 +105,7 @@ public class ListaRecuerdos extends AppCompatActivity {
         private ProgressDialog progressDialog = new ProgressDialog(ListaRecuerdos.this);
         String exception_message="";
 
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -117,8 +118,8 @@ public class ListaRecuerdos extends AppCompatActivity {
         @Override
         protected ArrayList<Recuerdo> doInBackground(String... params) {
 
-
-            SoapPrimitive resultString=null;
+            ArrayList<Recuerdo> recuerdos= new ArrayList<Recuerdo>();
+            SoapObject result=null;
             String SOAP_ACTION = "http://www.example.org/SistemaRecuerdosGeneral/buscarRecuerdoPorPatron";
             String METHOD_NAME = "buscarRecuerdoPorPatron";
             String NAMESPACE = "http://www.example.org/SistemaRecuerdosGeneral";
@@ -138,19 +139,23 @@ public class ListaRecuerdos extends AppCompatActivity {
                 HttpTransportSE transport = new HttpTransportSE(URL);
 
                 transport.call(SOAP_ACTION, soapEnvelope);
-                resultString = (SoapPrimitive) soapEnvelope.getResponse();
-                exception_message=resultString.toString();
+                result = (SoapObject) soapEnvelope.bodyIn;
+                int count=result.getPropertyCount();
+                List<String> idRecuerdos= new ArrayList<String>();
+                for(int i=0;i<count;i++) {
+                    SoapObject so = (SoapObject) result.getProperty(i);
+                    idRecuerdos.add(so.toString());
+                }
 
-                //List<Recuerdo> resultado_recuerdos= (List<Recuerdo>) resultString;
-
-
-
+                /*Se tiene la lista de IDs de los recuerdos. Se requiere usar buscarRecuerdoPorID para
+                descargar los recuerdos necesarios junto con su informacion
+                */
 
             } catch (Exception ex) {
                exception_message=ex.getMessage();
             }
 
-            return null;
+            return recuerdos;
         }
 
         @Override
@@ -159,7 +164,6 @@ public class ListaRecuerdos extends AppCompatActivity {
             if (progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
-
             RecuerdoAdapter rAdapter= new RecuerdoAdapter(ListaRecuerdos.this,recuerdos);
             ListView list_recuerdos= (ListView) findViewById(R.id.listResults);
             list_recuerdos.setAdapter(rAdapter);
